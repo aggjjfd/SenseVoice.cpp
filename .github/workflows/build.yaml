@@ -19,26 +19,12 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
-          msystem: ${{matrix.sys}}
+          msystem: ${{ matrix.sys }}
           install: >-
             base-devel
-            mingw-w64-${{matrix.env}}-toolchain
-            mingw-w64-${{matrix.env}}-cmake
-            mingw-w64-${{matrix.env}}-openblas
-
-      - name: Build using CMake
-        shell: msys2 {0}
-        run: |
-          export PATH="$PATH:/c/Program\ Files/Git/cmd"
-          /c/Program\ Files/Git/cmd/git.exe submodule sync
-          /c/Program\ Files/Git/cmd/git.exe submodule update --init --recursive
-          cmake -B build
-          cmake --build build --config ${{ matrix.build }} -j $(nproc)
-
-      - name: Clean after building using CMake
-        shell: msys2 {0}
-        run: |
-          rm -rf build
+            mingw-w64-${{ matrix.env }}-toolchain
+            mingw-w64-${{ matrix.env }}-cmake
+            mingw-w64-${{ matrix.env }}-openblas
 
       - name: Build using CMake w/ OpenBLAS
         shell: msys2 {0}
@@ -47,14 +33,13 @@ jobs:
           cmake -B build -DGGML_OPENBLAS=ON
           cmake --build build --config ${{ matrix.build }} -j $(nproc)
 
-      - name: Archive build directory
-        run: |
-          cd build
-          zip -r build_artifact.zip .
-        shell: bash
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build_artifact
-          path: build/build_artifact.zip
+          path: build
+          if-no-files-found: error
+          retention-days: 89
+          compression-level: 0
+          overwrite: true
+          include-hidden-files: false
